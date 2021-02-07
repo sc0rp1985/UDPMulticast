@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<config>
+	<multicastGroupAddress address="soap.udp://224.0.0.1:40000"/>
+	<valueRange from="0"
+				to="100000"/>
+
+	<sendDelay delayMs="10"/>
+	<receiveDelay tickMs="1000"
+		          sleepMS ="10"/>
+</config>
