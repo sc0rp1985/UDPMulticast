@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.ServiceModel.Description;
 using Common;
+using System.Threading;
 
 namespace Server
 {
@@ -23,6 +24,8 @@ namespace Server
             IReceiveService proxy = factory.CreateChannel();
             try
             {
+                var sleepTime = 0;
+                var sendError = false;
                 while (true)
                 {
                     var val = rnd.Next(config.Range.StartVal,config.Range.EndVal);
@@ -36,11 +39,30 @@ namespace Server
                             PackageNumber = number,
                             Value = val,
                         });
+                        sendError = false;
+                        sleepTime = 0;
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine("Ошибка отправки сообщения: " + e.Message);
+                        Console.WriteLine($"Повтор через {sleepTime} c.");
+                        Thread.Sleep(sleepTime * 1000);
+                        sendError = true;
                     }
+                    if (sendError) 
+                    {
+                        if (sleepTime == 0)
+                            sleepTime = 10;
+                        else if (sleepTime < 30)
+                            sleepTime = 30;
+                        else if (sleepTime < 60)
+                            sleepTime = 60;
+                        else if (sleepTime < 300)
+                            sleepTime = 300;
+                        else if (sleepTime < 600)
+                            sleepTime = 600;
+                    }
+                    
                     System.Threading.Thread.Sleep(new TimeSpan(0, 0, 0,0,config.SenderDelay.Delay));
                 }
             }
