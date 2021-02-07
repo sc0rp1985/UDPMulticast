@@ -12,14 +12,6 @@ namespace Server
 {
     class Program
     {
-        
-
-        public class ValueGenerator 
-         { 
-
-         }
-
-
          static void Main(string[] args)
          {
             var config = GlobalConfig.Instance;            
@@ -36,12 +28,19 @@ namespace Server
                     var val = rnd.Next(config.Range.StartVal,config.Range.EndVal);
                     number++;
                     Console.WriteLine($"send value {val} nummber {number}");
-                    proxy.SendPackage(new PackageDto
+                    try
                     {
-                        PackageDate = DateTime.Now,
-                        PackageNumber = number,
-                        Value = val,
-                    });
+                        proxy.SendPackage(new PackageDto
+                        {
+                            PackageDate = DateTime.Now,
+                            PackageNumber = number,
+                            Value = val,
+                        });
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("Ошибка отправки сообщения: " + e.Message);
+                    }
                     System.Threading.Thread.Sleep(new TimeSpan(0, 0, 0,0,config.SenderDelay.Delay));
                 }
             }
