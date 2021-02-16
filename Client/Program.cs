@@ -13,13 +13,13 @@ namespace Client
     {
         static void Main(string[] args)
         {
-            var config = GlobalConfig.Instance;
-            //прогрев 
-            var t = Storage.Count;
-            Statistics.GetStatistic();
+            var config = GlobalConfig.Instance;            
+            var storage = new Storage();
+            var stat = new Statistics(storage);            
 
-            UdpBinding myBinding = new UdpBinding();            
-            ServiceHost host = new ServiceHost(typeof(ReceiveService), new Uri(config.Multicast.Address));            
+            UdpBinding myBinding = new UdpBinding();
+            var srv = new ReceiveService(storage);
+            ServiceHost host = new ServiceHost(srv, new Uri(config.Multicast.Address));            
             host.AddServiceEndpoint(typeof(IReceiveService), myBinding, string.Empty);
             host.Open();            
             Console.WriteLine("Start receiving stock information");
@@ -29,7 +29,7 @@ namespace Client
                 Console.ReadLine();
                 try
                 {
-                    var statList = Statistics.GetStatistic();
+                    var statList = stat.GetStatistic();
                     Console.WriteLine(string.Join(", ", statList.Select(x => $"{x.StatName} = {x.Value}")));
                 }
                 catch (Exception e)

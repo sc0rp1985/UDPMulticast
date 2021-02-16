@@ -12,56 +12,46 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    public class Storage
+    public interface IStorage 
     {
-        static Storage _instace;
-        static ulong[] data;
-        static object _loclObj = new object();
-        static object _lockData = new object();
+        StorageInfo GetStorageInfo();
+        void AddPackage(PackageDto package);
+    }
 
-        static ulong _count;
-        static ulong _lostCount;
-        static ulong _lastNum;
-        static ConcurrentQueue<PackageDto> cq; 
-        static bool _needSleep;
-        static Timer sleepTimer;
 
-        public static StorageInfo StorageInfo 
-        { 
-            get
+    public class Storage : IStorage
+    {       
+        ulong[] data;        
+        object _lockData = new object();
+        ulong _lostCount;
+        ulong _lastNum;
+        ConcurrentQueue<PackageDto> cq; 
+        bool _needSleep;
+        Timer sleepTimer;
+
+
+
+        public StorageInfo GetStorageInfo ()
+        {            
+            var copy = new ulong[data.Length];
+            ulong lost = 0;
+            int qc = cq.Count();
+            lock (_lockData)
             {
-                var copy = new ulong[data.Length];
-                ulong lost = 0;
-                int qc = cq.Count();
-                lock (_lockData)
-                {
-                    data.CopyTo(copy, 0);
-                    lost = LostCount;
+                data.CopyTo(copy, 0);
+                lost =_lostCount;
 
-                }
-                var info = new StorageInfo
-                {
-                    Data = copy,
-                    Lost = lost,
-                    QueueCount = qc,
-                };
-                return info;
-            } 
+            }
+            var info = new StorageInfo
+            {
+                Data = copy,
+                Lost = lost,
+                QueueCount = qc,
+            };
+            return info;            
         }
 
-        public static ulong[] Data { get {
-                var copy = new ulong[data.Length];
-                lock (_lockData)
-                {
-                    data.CopyTo(copy, 0);
-                }
-                return copy;
-            } }
-
-        public static ulong Count => _count;
-        public static ulong LostCount => _lostCount;
-
-        static void FillArray()
+        void FillArray()
         {
             try
             {
@@ -80,8 +70,7 @@ namespace Common
 
                         lock (_lockData)
                         {
-                            data[package.Value] += 1;
-                            _count++;
+                            data[package.Value] += 1;                            
                         }
                     }
 
@@ -93,7 +82,7 @@ namespace Common
             }
         }
 
-        static Storage()
+        public Storage()
         {
             data= new ulong[GlobalConfig.Instance.Range.EndVal];
             cq = new ConcurrentQueue<PackageDto>();
@@ -110,13 +99,9 @@ namespace Common
                    _needSleep = true;
                 }, null, 0, GlobalConfig.Instance.ReceiverDelay.TickMs);
                 
-        }
-
-        /*private Storage() 
-        {            
-        } */      
+        }          
         
-        public static void AddPackage(PackageDto package) 
+        public void AddPackage(PackageDto package) 
         {
             if (_needSleep) 
             {

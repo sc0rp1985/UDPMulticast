@@ -29,13 +29,24 @@ namespace Common
         public DateTime PackageDate { get; set; }
     }
 
+    [ServiceBehavior(
+    ConcurrencyMode = ConcurrencyMode.Single,
+    InstanceContextMode = InstanceContextMode.Single    
+  )]
     public class ReceiveService : IReceiveService
-    {   
-        public void SendPackage(PackageDto dto)
+    {
+        IStorage _storage;
+
+        public ReceiveService(IStorage storage) 
         {
+            _storage = storage;
+        }
+
+        public void SendPackage(PackageDto dto)
+        {            
             try
             {
-                Storage.AddPackage(dto);
+                _storage.AddPackage(dto);
             }
             catch (Exception e)
             {

@@ -7,13 +7,21 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    public class Statistics
+    public interface IStaticstic
     {
-        static List<StatResult> _statCache = new List<StatResult>();
-        static readonly List<IProcessor> statList = new List<IProcessor> { new AvgProcessor(), new CountProcessor(), new StandartDeviationProcessor(), new ModeProcessor(), new Median() };
-        static object _lockObj = new object();
-        static Statistics()
+        IList<StatResult> GetStatistic();
+
+    }
+
+    public class Statistics : IStaticstic
+    {
+         List<StatResult> _statCache = new List<StatResult>();
+        readonly List<IProcessor> statList = new List<IProcessor> { new AvgProcessor(), new CountProcessor(), new StandartDeviationProcessor(), new ModeProcessor(), new Median() };
+        object _lockObj = new object();
+        IStorage _storage;
+        public Statistics(IStorage storage)
         {
+            _storage = storage;
             var statThread = new Thread(() =>
             {
                 while (true)
@@ -32,9 +40,9 @@ namespace Common
             statThread.Start();
         }
 
-        static void CalcStat()
+        public void CalcStat()
         {
-            var si = Storage.StorageInfo;
+            var si = _storage.GetStorageInfo();
             var copy = si.Data;
 
             var ta = statList.Select(x => x.Process(copy)).ToArray();
@@ -56,7 +64,7 @@ namespace Common
             }
         }
 
-        public static List<StatResult> GetStatistic()
+        public IList<StatResult> GetStatistic()
         {
             lock(_lockObj)
                 return _statCache.ToList();
