@@ -40,13 +40,13 @@ namespace Common
             statThread.Start();
         }
 
-        public void CalcStat()
+        public async void CalcStat()
         {
             var si = _storage.GetStorageInfo();
             var copy = si.Data;
 
             var ta = statList.Select(x => x.Process(copy)).ToArray();
-            Task.WaitAll(ta);            
+            await Task.WhenAll(ta);            
             var tmp = ta.Select(x => x.Result).ToList();
             tmp.Add(new StatResult
             {
